@@ -36,7 +36,7 @@ def image_loader(image_name):
     return image.to(device, torch.float)
 
 style_img = image_loader("./images/vangogh.png")
-content_img = image_loader("./images/faulkner.jpg")
+content_img = image_loader("./images/kanye.jpg")
 
 assert style_img.size() == content_img.size() # must be the same size
 
