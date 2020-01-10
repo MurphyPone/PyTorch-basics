@@ -53,10 +53,10 @@ def imshow(tensor, title=None):
     plt.pause(0.001)    # allow for update 
 
 plt.figure()
-#imshow(style_img, title='style_img')
+imshow(style_img, title='style_img')
 
 plt.figure()
-#imshow(content_img, title='content_img')
+imshow(content_img, title='content_img')
 
 class ContentLoss(nn.Module):
     def __init__(self, target):
@@ -160,10 +160,11 @@ def get_style_model_and_losses(cnn, norm_mean, norm_std, style_img, content_img,
     return model, style_losses, content_losses
 
 input_img = content_img.clone()
+#input_img = torch.randn(content_img.data.size(), device=device)
 
 # add original input image to the figure
 plt.figure()
-imshow(input_img, title='Input Image')
+imshow(input_img, title='input_image')
 #plt.savefig('Input Image')
 
 # optimize w/ limited-memory BFGS (bunch of dudes names smashed together)
@@ -219,7 +220,7 @@ def run_style_transfer(cnn, norm_mean, norm_std, content_img, style_img,
 output = run_style_transfer(cnn, cnn_normalization_mean, cnn_normalization_std, content_img, style_img, input_img)
 
 plt.figure()
-plt.savefig('output.png')
-
+imshow(output, title='output_image')
+plt.savefig('./images/output.png')
 plt.ioff()
 plt.show()
