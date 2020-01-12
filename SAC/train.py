@@ -7,20 +7,19 @@ from model import *
 from replay_buffer import ReplayBuffer 
 from visualize import * 
 from copy import deepcopy
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# TODO throw in the device stuff here before creating optimizers for models
+algo_name = 'SAC'       # Used for visualization // TODO implemenet ERE 
+max_episodes = 2000     # after 200 episodes, SAC flatlines
 
-algo_name = 'SAC'   # Used for visualization
-max_episodes = 2000  # after 200 episodes, SAC flatlines
-
-gamma = 0.99        # Discount
-α = 0.1           # ???
-lr = 3e-4           # Determines how big of a gradient step to take when optimizing   TODO tinker with this
-tau = 0.995         # ???
+gamma = 0.99            # Discount
+α = 0.1                 # Entropy term
+lr = 3e-4               # Determines how big of a gradient step to take when optimizing   TODO tinker with this
+tau = 0.995             # Target smoothing coefficient? 
 
 env = gym.make('Pendulum-v0')
 replay_buffer = ReplayBuffer(1e6) 
-batch_size = 128    # TODO tinker with this  
+batch_size = 128        # TODO tinker with this  
 
 policy_net = PolicyNetwork(env)
 policy_optim = torch.optim.Adam(policy_net.parameters(), lr)
@@ -35,21 +34,20 @@ q1_optim = torch.optim.Adam(q1_net.parameters(), lr)
 q2_optim = torch.optim.Adam(q2_net.parameters(), lr)
 
 def train():
-    explore(10000)                          # Explore the environment by taking random actions 
+    explore(10000)                              # Explore the environment by taking random actions 
     episode = 0                             
     while episode < max_episodes:
-        s = env.reset()                     # Reset the environment w/o losing our transitions in the replay_buffer
+        s = env.reset()                         # Reset the environment w/o losing our transitions in the replay_buffer
         episodic_r =  0
         while True:
             with torch.no_grad():
                 a = policy_net(s)               # action to be taken based on the state 
-            s2, r, done, _ = env.step(2*a)  # why is this 2*a
+            s2, r, done, _ = env.step(2*a)      # why is this 2*a
             replay_buffer.store(s, a, r, s2, done)
             episodic_r += r 
 
             if done: 
-                #update_viz(episode, episodic_r, algo_name + " Pendulum-v0")
-                plot_reward(episode, episodic_r)
+                plot_reward(episode, episodic_r, '#4A04D4')
                 episode += 1
                 break
             else:
@@ -81,14 +79,17 @@ def update(episode):
 
     q1_loss = F.mse_loss(q1_net(s, a), y)
     q2_loss = F.mse_loss(q2_net(s, a), y)
+    plot_loss(episode, q1_loss, 'Q1', '#fe3b00')
+    plot_loss(episode, q2_loss, 'Q2', '#004fff')
+
 
     # Template for optimization:
-                # for input, target in dataset:
-                #     optimizer.zero_grad()
-                #     output = model(input)
-                #     loss = loss_fn(output, target)
-                #     loss.backward()
-                #     optimizer.step()
+        # for input, target in dataset:
+        #     optimizer.zero_grad()
+        #     output = model(input)
+        #     loss = loss_fn(output, target)
+        #     loss.backward()
+        #     optimizer.step()
     q1_optim.zero_grad()    # clears all optimizer torch.Tensors
     q1_loss.backward()     # compute the new gradients
     q1_optim.step()         # update the parameters accordingly

@@ -1,50 +1,53 @@
 import numpy as np
+from math import isnan
 from visdom import Visdom
 import torch 
-from math import isnan
 
 viz = Visdom()
 
 d = {}
+win = None
 
-def get_line(x, y, name, color='#000', isFilled=False, fillColor='transparent', width=2, showLegend=False): 
+def get_line(x, y, name, color='#000', isFilled=False, fillcolor='transparent', width=2, showlegend=False):
     if isFilled:
         fill = 'tonexty'
-    else: 
+    else:
         fill = 'none'
 
     return dict(
         x=x,
         y=y,
         mode='lines',
-        tpye='custom',
+        type='custom',
         line=dict(
             color=color,
             width=width),
         fill=fill,
-        fillcolor=fillColor,
+        fillcolor=fillcolor,
         name=name,
-        showlegend=showLegend
+        showlegend=showlegend
     )
 
-def plot_loss(epoch, loss, color='#000'):
-    win = 'loss'
-    title = 'Loss'
+
+def plot_loss(epoch, loss, policy, color='#000'):
+    win = policy + ' loss'
+    title = policy + 'Loss'
 
     if 'loss' not in d:
         d['loss'] = []
     d['loss'].append((epoch, loss.item()))
 
-    x,y = zip(*d['loss'])
-    data = [get_line(x, y, 'loss', color=color)]
+    x, y = zip(*d['loss'])
+    data = [get_line(x, y, policy + ' loss', color=color, showlegend=True)]
 
     layout = dict(
         title=title,
         xaxis={'title': 'Iterations'},
-        yaxis={'title': 'Loss'},
+        yaxis={'title': 'Loss'}
     )
 
     viz._send({'data': data, 'layout': layout, 'win': win})
+
 
 def plot_reward(t, r, color='#000'):
     win = 'reward'
