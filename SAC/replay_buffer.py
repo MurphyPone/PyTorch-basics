@@ -6,18 +6,19 @@ import numpy as np
 import torch 
 import random 
 from collections import deque
+from itertools import islice
 
 class ReplayBuffer():
     """Stores tuples of (state, action, reward, state+1, mask) which the agent samples from when TODO exploring vs. randomly acting?"""
     
-    def __init__(self, size):
+    def __init__(self, size=1e6):
         """Constructor for a ReplayBuffer which takes the size of the buffer"""
         
         self.buffer = deque(maxlen=int(size))       # extends list which can be sampled from 
         self.maxSize = size 
         self.len = 0
 
-    def sample(self, count=128): 
+    def sample(self, count=128):
         """Attempts to fetch the desired amount of transitions tuples and return them separated into 
         arrays of states, actions, rewards, etc., defaults to 128
         """

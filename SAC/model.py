@@ -37,12 +37,15 @@ class PolicyNetwork(nn.Module):
         return torch.tanh(dist.sample())
 
     def sample(self, x):
+        """Returns the normalized action to be taken as well as the ?adjusted? 
+        log_prob of the sampled action in the distribution
+        """
         dist = self.dist(x)
         x = dist.rsample()      # rsample here because the sample has been reparameterized s.t. it is now differentiable
         a = torch.tanh(x)       # using tanh map outputs since it's range is (-1, 1) which is arbitrarily desired
 
-        log_p = dist.log_prob(x)
-        log_p -= torch.log(1 - torch.pow(a, 2) + 1e-6) ### ????? 
+        log_p = dist.log_prob(x)                        # log_prob of the distribution at x 
+        log_p = -torch.log(1 - torch.pow(a, 2) + 1e-6)  # TODO what is this 
 
         return a, log_p
 
@@ -58,5 +61,5 @@ class QNetwork(nn.Module):
             nn.Linear(64, 1)
         )
 
-    def forward(self, s, a):            # feeds in the state and action?
+    def forward(self, s, a):
         return self.main(torch.cat([s, a], 1))

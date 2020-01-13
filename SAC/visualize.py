@@ -30,15 +30,24 @@ def get_line(x, y, name, color='#000', isFilled=False, fillcolor='transparent', 
 
 
 def plot_loss(epoch, loss, policy, color='#000'):
-    win = policy + ' loss'
-    title = policy + 'Loss'
+    win = 'loss'
+    title = 'Loss'
 
     if 'loss' not in d:
-        d['loss'] = []
-    d['loss'].append((epoch, loss.item()))
+        d['loss'] = {}
+    if policy not in d['loss']:
+        d['loss'][policy] = []
 
-    x, y = zip(*d['loss'])
-    data = [get_line(x, y, policy + ' loss', color=color, showlegend=True)]
+    d['loss'][policy].append((epoch, loss.item(), color))
+
+    # x, y = zip(*d['loss'])
+    # data = [get_line(x, y, policy + ' loss', color=color, showlegend=True)]
+    data = []
+    for key in d['loss']:
+        x, y, c = zip(*d['loss'][key])
+        data.append(
+            get_line(x, y, key, color=c, showlegend=True)
+        )
 
     layout = dict(
         title=title,
