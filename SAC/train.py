@@ -14,7 +14,7 @@ max_episodes = 2000     # after 40 episodes, SAC flatlines around [-200, -100] r
 max_steps = 200         # auto-terminate episode after > 200 steps 
 
 gamma = 0.99            # Discount
-α = 0.1                 # Entropy temperature 
+α = 0.1                 # Entropy temperature -- relative importance vs. rewards
 lr = 3e-4               # Determines how big of a gradient step to take when optimizing   
 tau = 0.995             # Target smoothing coefficient --> how much of the old network(s) to keep
 
@@ -81,9 +81,9 @@ def update(episode):
     
     with torch.no_grad():
         a2, π2 = policy_net.sample(s2)
-        q1_next_max = q1_target(s2, a2)
-        q2_next_max = q2_target(s2, a2)     # Use targets to slow down
-        min_q = torch.min(q1_next_max, q2_next_max)
+        q1_next_max = q1_target(s2, a2)     # TODO Pretty sure this is the vanilla implementation of KL-Divergence part?
+        q2_next_max = q2_target(s2, a2)     # Use targets to slow down/stabilize
+        min_q = torch.min(q1_next_max, q2_next_max) # Take the min to balance over-reward for seeing a new state
 
         J = r + done*gamma*(min_q - α*π2)      # difference between the min Q target and the entropy sampled policy
 
@@ -110,7 +110,7 @@ def update(episode):
     a2, π2 = policy_net.sample(s)
 
     policy_loss = (α*π2 - q1_net(s, a2)).mean()   # use one network for consistency
-        
+
     policy_optim.zero_grad()
     policy_loss.backward()
     policy_optim.step()

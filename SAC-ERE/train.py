@@ -14,7 +14,7 @@ max_episodes = 2000     # after 200 episodes, SAC flatlines around [-200, -100] 
 max_steps = 200         # auto-terminate episode after > 200 steps for pendulum-v0
 
 gamma = 0.99            # Discount
-α = 0.1                 # Entropy temperature 
+α = 0.1                 # Entropy temperature -- relative importance vs. rewards
 lr = 3e-4               # Determines how big of a gradient step to take when optimizing   
 tau = 0.995             # Target smoothing coefficient --> how much of the old network(s) to keep
 N = 1e6                 # replay_buffer size 
@@ -56,7 +56,7 @@ def train():
                 break
             else:
                 s = s2 
-            update(step)                         # if s2 is a terminal state then -->update 
+            update(episode, step)                         # if s2 is a terminal state then -->update 
 
 
 # explore to populate the replay buffer
@@ -73,7 +73,7 @@ def explore(steps):
             else: s = s2 
 
 # Adjust policy and target networks 
-def update(episode):
+def update(episode, step):
     """
     For each gradient step, adjust both Q networks, both target networks, as well as the policy network
     """
@@ -83,15 +83,15 @@ def update(episode):
         Let N be the max size of the replay buffer = 1e6.  Then for the kth update 1 ≤ k ≤ K, we sample uniformly
         from the most recent c_k data points where c_k = max{N*η^(k *1000/K), c_min}, where η = 0.996   
     """
-    c_k = max(int(N * pow(η, episode * 1000/max_steps)), batch_size)
+    c_k = max(int(N * pow(η, step * 1000/max_steps)), batch_size)
 
     s, a, r, s2, done = replay_buffer.sample(batch_size, c_k)  
     a = a.squeeze().unsqueeze(1)
     with torch.no_grad():
         a2, π2 = policy_net.sample(s2)
-        q1_next_max = q1_target(s2, a2)
+        q1_next_max = q1_target(s2, a2)     # TODO Pretty sure this is the vanilla implementation of KL-Divergence part?
         q2_next_max = q2_target(s2, a2)     # Use targets to slow down
-        min_q = torch.min(q1_next_max, q2_next_max)
+        min_q = torch.min(q1_next_max, q2_next_max) # Take the min to balance over-reward for seeing a new state, per DDQN
 
         J = r + done*gamma*(min_q - α*π2)      # difference between the min Q target and the entropy sampled policy
 
@@ -128,9 +128,10 @@ def update(episode):
     for param, target_param in zip(q2_net.parameters(), q2_target.parameters()):
         target_param.data = target_param * tau + param.data*(1-tau)
 
-    # if episode % 5 == 0: 
-    #     plot_loss(episode, policy_loss, 'π', '#000000')
-    #     plot_loss(episode, q1_loss, 'Q1', '#fe3b00')
-    #     plot_loss(episode, q2_loss, 'Q2', '#004fff')
+    # this does cause training issues since it pushes too much data 
+    if step % 500 == 0: 
+        plot_loss(episode, policy_loss, 'π', '#000000')
+        plot_loss(episode, q1_loss, 'Q1', '#fe3b00')
+        plot_loss(episode, q2_loss, 'Q2', '#004fff')
 
 train()
