@@ -10,16 +10,18 @@ from copy import deepcopy
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 algo_name = 'SAC'       # Used for visualization 
-max_episodes = 2000     # after 40 episodes, SAC flatlines around [-200, -100] reward
-max_steps = 200         # auto-terminate episode after > 200 steps 
+max_episodes = 2000     # after 200 episodes, SAC flatlines around [-200, -100] reward
+max_steps = 200         # auto-terminate episode after > 200 steps for pendulum-v0
 
 gamma = 0.99            # Discount
 α = 0.1                 # Entropy temperature 
 lr = 3e-4               # Determines how big of a gradient step to take when optimizing   
 tau = 0.995             # Target smoothing coefficient --> how much of the old network(s) to keep
+N = 1e6                 # replay_buffer size 
+η = 0.996               # Batch sample emphasis term
 
-env = gym.make('Pendulum-v0')
-replay_buffer = ReplayBuffer(1e6) 
+env = gym.make('Pendulum-v0')       #LunarLanderContinuous-v2, Pendulum-v0
+replay_buffer = ReplayBuffer(N) 
 batch_size = 128        
 
 policy_net = PolicyNetwork(env)
@@ -44,7 +46,7 @@ def train():
         for step in range(max_steps):                  
             with torch.no_grad():
                 a = policy_net(s)                   # Sample action from policy
-            s2, r, done, _ = env.step(2*a)          # Sample transition from environment //TODO why 2*a
+            s2, r, done, _ = env.step(2*a)          # Sample transition from environment //TODO why 2*a ? 
             replay_buffer.store(s, a, r, s2, done)  # Add transition to the replay buffer
             episodic_r += r 
 
@@ -70,15 +72,21 @@ def explore(steps):
             if done: break
             else: s = s2 
 
-
+# Adjust policy and target networks 
 def update(episode):
     """
-    For each gradient step, adjust both Q networks, both target networks, as well as the policy network    
+    For each gradient step, adjust both Q networks, both target networks, as well as the policy network
     """
-    
-    s, a, r, s2, done = replay_buffer.sample(batch_size)  
+
+    """
+        Assume that in the current update phase (read episode?) we are to make K mini-batch updates.  
+        Let N be the max size of the replay buffer = 1e6.  Then for the kth update 1 ≤ k ≤ K, we sample uniformly
+        from the most recent c_k data points where c_k = max{N*η^(k *1000/K), c_min}, where η = 0.996   
+    """
+    c_k = max(int(N * pow(η, episode * 1000/max_steps)), batch_size)
+
+    s, a, r, s2, done = replay_buffer.sample(batch_size, c_k)  
     a = a.squeeze().unsqueeze(1)
-    
     with torch.no_grad():
         a2, π2 = policy_net.sample(s2)
         q1_next_max = q1_target(s2, a2)
@@ -87,7 +95,6 @@ def update(episode):
 
         J = r + done*gamma*(min_q - α*π2)      # difference between the min Q target and the entropy sampled policy
 
-    # Calc loss based on the current marginals and the evaled objective using s2
     q1_loss = F.mse_loss(q1_net(s, a), J)
     q2_loss = F.mse_loss(q2_net(s, a), J)
 
@@ -100,17 +107,17 @@ def update(episode):
         #     optimizer.step()
     
     q1_optim.zero_grad()    # clears all optimizer torch.Tensors
-    q1_loss.backward()      # compute the new gradients
+    q1_loss.backward()     # compute the new gradients
     q1_optim.step()         # update the parameters accordingly
 
     q2_optim.zero_grad()    # clears all optimizer torch.Tensors
-    q2_loss.backward()      # compute the new gradients
+    q2_loss.backward()     # compute the new gradients
     q2_optim.step()         # update the parameters accordingly
 
     a2, π2 = policy_net.sample(s)
 
     policy_loss = (α*π2 - q1_net(s, a2)).mean()   # use one network for consistency
-        
+    
     policy_optim.zero_grad()
     policy_loss.backward()
     policy_optim.step()
