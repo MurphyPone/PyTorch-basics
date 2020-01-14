@@ -93,7 +93,7 @@ def update(episode, step):
     actor_loss.backward()
     actor_optim.step()
 
-    critic_loss = F.mse_loss(returns, critic(s)) 
+    # critic_loss = F.mse_loss(returns, critic(s)) 
     critic_loss = ((returns - critic(s)) ** 2).mean()
     
     critic_optim.zero_grad()
