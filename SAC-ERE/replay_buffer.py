@@ -1,7 +1,3 @@
-"""
-Explain what the replay buffer is used for
-"""
-
 import numpy as np 
 import torch 
 import random 
@@ -9,7 +5,7 @@ from collections import deque
 from itertools import islice
 
 class ReplayBuffer():
-    """Stores tuples of (state, action, reward, state+1, mask) which the agent samples from when TODO exploring vs. randomly acting?"""
+    """Stores tuples of (state, action, reward, state+1, mask) which the agent samples from when updating"""    
     
     def __init__(self, size=1e6):
         """Constructor for a ReplayBuffer which takes the size of the buffer"""

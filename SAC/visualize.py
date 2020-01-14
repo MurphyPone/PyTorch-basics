@@ -29,9 +29,9 @@ def get_line(x, y, name, color='#000', isFilled=False, fillcolor='transparent', 
     )
 
 
-def plot_loss(epoch, loss, policy, color='#000'):
-    win = 'loss'
-    title = 'Loss'
+def plot_loss(epoch, loss, policy, algo, color='#000'):
+    win = algo + 'loss'
+    title = algo + ' Loss'
 
     if 'loss' not in d:
         d['loss'] = {}
@@ -45,8 +45,9 @@ def plot_loss(epoch, loss, policy, color='#000'):
     data = []
     for key in d['loss']:
         x, y, c = zip(*d['loss'][key])
+        
         data.append(
-            get_line(x, y, key, color=c, showlegend=True)
+            get_line(x, y, key, color=c[0], showlegend=True)
         )
 
     layout = dict(
@@ -58,9 +59,9 @@ def plot_loss(epoch, loss, policy, color='#000'):
     viz._send({'data': data, 'layout': layout, 'win': win})
 
 
-def plot_reward(t, r, color='#000'):
-    win = 'reward'
-    title = 'Episodic Reward'
+def plot_reward(t, r, algo, color='#000'):
+    win = algo + 'reward'
+    title = algo + ' Episodic Reward'
 
     if 'reward' not in d:
         d['reward'] = []

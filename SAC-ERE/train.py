@@ -9,7 +9,7 @@ from visualize import *
 from copy import deepcopy
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-algo_name = 'SAC'       # Used for visualization 
+algo_name = 'SAC-ERE'       # Used for visualization 
 max_episodes = 2000     # after 200 episodes, SAC flatlines around [-200, -100] reward
 max_steps = 200         # auto-terminate episode after > 200 steps for pendulum-v0
 
@@ -28,13 +28,14 @@ policy_net = PolicyNetwork(env)
 policy_optim = torch.optim.Adam(policy_net.parameters(), lr)
 
 q1_net = QNetwork(env)
-q2_net = QNetwork(env)               # //TODO 
+q2_net = QNetwork(env)               # Use multiple target/approximation networks here since new data is overly rewarded 
 
 q1_target = deepcopy(q1_net)
-q2_target = deepcopy(q2_net)
+q2_target = deepcopy(q1_net)
 
 q1_optim = torch.optim.Adam(q1_net.parameters(), lr)
 q2_optim = torch.optim.Adam(q2_net.parameters(), lr)
+
 
 def train():
     explore(10000)                                  # Explore the environment by taking random actions 
@@ -51,7 +52,7 @@ def train():
             episodic_r += r 
 
             if done: 
-                plot_reward(episode, episodic_r, '#4A04D4')
+                plot_reward(episode, episodic_r, algo_name, '#4A04D4')
                 episode += 1
                 break
             else:
@@ -91,7 +92,9 @@ def update(episode, step):
         a2, π2 = policy_net.sample(s2)
         q1_next_max = q1_target(s2, a2)     # TODO Pretty sure this is the vanilla implementation of KL-Divergence part?
         q2_next_max = q2_target(s2, a2)     # Use targets to slow down
-        min_q = torch.min(q1_next_max, q2_next_max) # Take the min to balance over-reward for seeing a new state, per DDQN
+
+        # Take the min to balance over-reward for seeing a new state, per DDQN
+        min_q = torch.min(q1_next_max, q2_next_max) 
 
         J = r + done*gamma*(min_q - α*π2)      # difference between the min Q target and the entropy sampled policy
 
@@ -116,7 +119,7 @@ def update(episode, step):
 
     a2, π2 = policy_net.sample(s)
 
-    policy_loss = (α*π2 - q1_net(s, a2)).mean()   # use one network for consistency
+    policy_loss = (α*π2 - q1_net(s, a2)).mean() # use one network for consistency
     
     policy_optim.zero_grad()
     policy_loss.backward()
@@ -130,8 +133,9 @@ def update(episode, step):
 
     # this does cause training issues since it pushes too much data 
     if step % 500 == 0: 
-        plot_loss(episode, policy_loss, 'π', '#000000')
-        plot_loss(episode, q1_loss, 'Q1', '#fe3b00')
-        plot_loss(episode, q2_loss, 'Q2', '#004fff')
+        plot_loss(episode, policy_loss, 'π', algo_name, color='#f44')
+        # plot_loss(episode, q1_loss, 'Q1', color='#FE3')
+        # plot_loss(episode, q2_loss, 'Q2', color='#F0F')
+
 
 train()

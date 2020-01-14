@@ -49,12 +49,12 @@ def train():
             episodic_r += r 
 
             if done: 
-                plot_reward(episode, episodic_r, '#4A04D4')
+                plot_reward(episode, episodic_r, algo_name, '#4A04D4')
                 episode += 1
                 break
             else:
                 s = s2 
-            update(step)                         # if s2 is a terminal state then -->update 
+            update(episode, step)                         # if s2 is a terminal state then -->update 
 
 
 # explore to populate the replay buffer
@@ -71,7 +71,7 @@ def explore(steps):
             else: s = s2 
 
 
-def update(episode):
+def update(episode, step):
     """
     For each gradient step, adjust both Q networks, both target networks, as well as the policy network    
     """
@@ -121,9 +121,10 @@ def update(episode):
     for param, target_param in zip(q2_net.parameters(), q2_target.parameters()):
         target_param.data = target_param * tau + param.data*(1-tau)
 
-    # if episode % 5 == 0: 
-    #     plot_loss(episode, policy_loss, 'π', '#000000')
-    #     plot_loss(episode, q1_loss, 'Q1', '#fe3b00')
-    #     plot_loss(episode, q2_loss, 'Q2', '#004fff')
+    if step % 500 == 0: 
+        plot_loss(episode, policy_loss, 'π', algo_name, color='#f44')
+        # plot_loss(episode, q1_loss, 'Q1', color='#FE3')
+        # plot_loss(episode, q2_loss, 'Q2', color='#F0F')
+
 
 train()
