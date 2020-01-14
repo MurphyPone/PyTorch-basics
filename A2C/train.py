@@ -66,7 +66,7 @@ def update(episode, step):
     For each gradient step, ... TODO 
     """
     # TODO I'm updating in batches... not necessarily corrrect s
-    s, a, r, s2, done = replay_buffer.sample(3*batch_size)  
+    s, a, r, s2, done = replay_buffer.sample(2*batch_size)  
     a = a.squeeze().unsqueeze(1)
 
     # Calculate returns 
@@ -74,7 +74,7 @@ def update(episode, step):
     discounted_next = 0
     for i in reversed(range(len(r))):
         returns[i] = r[i] + discounted_next    
-        discounted_next = gamma * returns[i] * done[i-1]
+        discounted_next = gamma * returns[i] * done[i-1] # TODO for some reason this makes it worse
     returns = torch.stack(returns)
 
     # Calculate and normalize advantage
