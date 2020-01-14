@@ -1,2 +1,3 @@
 # PyTorch-basics
-A series of models, neural nets, and exercises made in an effort to learn PyTorch.  
+A series of algorithms, and exercises made in an effort to learn PyTorch.  
+

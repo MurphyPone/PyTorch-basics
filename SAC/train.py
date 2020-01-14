@@ -123,8 +123,8 @@ def update(episode, step):
 
     if step % 500 == 0: 
         plot_loss(episode, policy_loss, 'π', algo_name, color='#f44')
-        # plot_loss(episode, q1_loss, 'Q1', color='#FE3')
-        # plot_loss(episode, q2_loss, 'Q2', color='#F0F')
+        # plot_loss(episode, q1_loss, 'Q1', algo_name, color='#FE3')
+        # plot_loss(episode, q2_loss, 'Q2', algo_name, color='#F0F')
 
 
 train()
