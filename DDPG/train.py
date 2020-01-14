@@ -12,7 +12,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 algo_name = 'DDPG'
 max_episodes = 2000
-max_steps = 200         # CartPole terminates after 200 steps, solved when avg reward ≥ 195 for ≥ 100 consecutive trials  
+max_steps = 200         
 
 gamma = 0.99
 lr = 3e-4
