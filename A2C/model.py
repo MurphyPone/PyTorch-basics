@@ -26,6 +26,7 @@ class Actor(nn.Module):
 
     def get_log_prob(self, s, a ):
         """You're gonna have to ask @BCHoagland about this one"""
+        
         orig_s_shape = s.shape
         s = s.squeeze()
         a = a.squeeze()

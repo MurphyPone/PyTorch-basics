@@ -72,16 +72,18 @@ def update(episode, step):
     # Calculate returns 
     returns = [0] * len(r)
     discounted_next = 0
+
     for i in reversed(range(len(r))):
         returns[i] = r[i] + discounted_next    
         discounted_next = gamma * returns[i] * done[i-1] # TODO for some reason this makes it worse
     returns = torch.stack(returns)
 
-    # Calculate and normalize advantage
-    adv = returns - critic(s)
-    mean = adv.mean()
-    std = adv.std()
-    adv = (adv - mean) / (std + 1e-6)             # TODO why do we add 1 millionth?
+    with torch.no_grad():
+        # Calculate and normalize advantage
+        adv = returns - critic(s)
+        mean = adv.mean()
+        std = adv.std()
+        adv = (adv - mean) / (std + 1e-6)   # Add 1e-6 in case all rewards are the same to prevent division by std=0           
 
     # Calculate the log_probabilities because: https://stats.stackexchange.com/questions/87182/what-is-the-role-of-the-logarithm-in-shannons-entropy
     log_p = actor.get_log_prob(s, a)
