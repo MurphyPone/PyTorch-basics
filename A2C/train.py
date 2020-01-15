@@ -66,26 +66,25 @@ def update(episode, step):
     For each gradient step, ... TODO 
     """
     # TODO I'm updating in batches... not necessarily corrrect s
-    s, a, r, s2, done = replay_buffer.sample(2*batch_size)  
+    s, a, r, s2, done = replay_buffer.sample(batch_size)  
     a = a.squeeze().unsqueeze(1)
 
     # Calculate returns 
     returns = [0] * len(r)
     discounted_next = 0
-
-    for i in reversed(range(len(r))):
-        returns[i] = r[i] + discounted_next    
-        discounted_next = gamma * returns[i] * done[i-1] # TODO for some reason this makes it worse
-    returns = torch.stack(returns)
-
     with torch.no_grad():
+        for i in reversed(range(len(r))):
+            returns[i] = r[i] + discounted_next    
+            discounted_next = gamma * returns[i] * done[i-1] # TODO for some reason this makes it worse
+        returns = torch.stack(returns)
+
         # Calculate and normalize advantage
         adv = returns - critic(s)
         mean = adv.mean()
         std = adv.std()
         adv = (adv - mean) / (std + 1e-6)   # Add 1e-6 in case all rewards are the same to prevent division by std=0           
 
-    # Calculate the log_probabilities because: https://stats.stackexchange.com/questions/87182/what-is-the-role-of-the-logarithm-in-shannons-entropy
+        # Calculate the log_probabilities because: https://stats.stackexchange.com/questions/87182/what-is-the-role-of-the-logarithm-in-shannons-entropy
     log_p = actor.get_log_prob(s, a)
 
     # Calculate loss and update actor/critic accordingly 
