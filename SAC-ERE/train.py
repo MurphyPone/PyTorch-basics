@@ -9,7 +9,7 @@ from visualize import *
 from copy import deepcopy
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-algo_name = 'SAC-ERE'       # Used for visualization 
+algo_name = 'SAC-ERE'   # Used for visualization 
 max_episodes = 2000     # after 200 episodes, SAC flatlines around [-200, -100] reward
 max_steps = 200         # auto-terminate episode after > 200 steps for pendulum-v0
 

@@ -11,8 +11,8 @@ from visualize import *
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 algo_name = 'AE'
 max_episodes = 100
-batch_size = 256
-lr = 3e-4           # play with this value
+batch_size = 128
+lr = 1e-3           # play with this value
 
 # load dataset from MNIST, save to ../datasets
 dataset = MNIST('../datasets', transform=transforms.ToTensor(), download=True)
@@ -29,7 +29,6 @@ for episode in range(max_episodes):
 
         # calculate loss and update acc.
         loss = torch.pow(img - output, 2).mean()
-        # loss = torch.nn.functional.MSELoss(img, output) ?
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
