@@ -27,4 +27,3 @@ for epoch in range(int(n_epochs)):
     if epoch % vis_iter == vis_iter - 1:
         plot_loss(epoch, loss)
         plot_dist(Q, 'Q', '#7600fe', (-20, 20))
-

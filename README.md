@@ -30,6 +30,10 @@ A series of algorithms, and exercises made in an effort to learn PyTorch.
 
 - **DAE**: Denoising Auto-Encoder perform the same task as standard Auto-Encoders but adjust for noise in the input data x. They are particularly useful for feature extraction and avoiding simply learning the Identity Function of a given dataset as they ~randomly sleect portions of the input to corrupt with "noise"
 
+- **Transformer**: Transformers eclipse the standard RNN performance via a self attetion mechanism which applies a significance value that serves to improve contextualization for reconstruction, kind of similar to in application to the function of an LSTM. I won't pretend to fully understand how they work, but here's a diagram
+
+![](https://pytorch.org/tutorials/_images/transformer_architecture.jpg)
+
 ## References
 
 - https://github.com/BCHoagland/ChaRLes
@@ -39,6 +43,8 @@ A series of algorithms, and exercises made in an effort to learn PyTorch.
 - [OpenAI](https://spinningup.openai.com/en/latest/spinningup/rl_intro.html)
 
 - https://murphypone.github.io/blog/ml-pm-1
+
+- https://github.com/aladdinpersson/Machine-Learning-Collection
 
 ## TODO  
 

@@ -43,7 +43,7 @@ def train():
             with torch.no_grad():
                 if random() < ε:
                     a = env.action_space.sample()   # Take random action from available
-                    #env.render()
+                    env.render()
                 else: 
                     a = int(np.argmax(q1(s)))                   # Sample action from policy
             
