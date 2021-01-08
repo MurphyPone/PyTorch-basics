@@ -33,18 +33,18 @@ def plot_loss(epoch, loss, policy, algo, color='#000'):
     win = algo + 'loss'
     title = algo + ' Loss'
 
-    if 'loss' not in d:
-        d['loss'] = {}
-    if policy not in d['loss']:
-        d['loss'][policy] = []
+    if algo not in d:
+        d[algo] = {}
+    if policy not in d[algo]:
+        d[algo][policy] = []
 
-    d['loss'][policy].append((epoch, loss.item(), color))
+    d[algo][policy].append((epoch, loss.item(), color))
 
     # x, y = zip(*d['loss'])
     # data = [get_line(x, y, policy + ' loss', color=color, showlegend=True)]
     data = []
-    for key in d['loss']:
-        x, y, c = zip(*d['loss'][key])
+    for key in d[algo]:
+        x, y, c = zip(*d[algo][key])
         
         data.append(
             get_line(x, y, key, color=c[0], showlegend=True)

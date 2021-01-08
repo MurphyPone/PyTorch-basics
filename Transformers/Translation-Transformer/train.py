@@ -11,6 +11,8 @@ from model import *
 from visualize import *
 
 algo_name = 'Translation Transformer'
+epoch_colors = ['#f00', '#f90', '#080', '#088', '#00f', '#91f'] 
+smooth_plots = False
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
@@ -47,7 +49,7 @@ def translate_sentence(model, sentence, german, english, device, max_len=100):
       break
 
   translated_sentence = [english.vocab.itos[idx] for idx in outputs]
-  return translated_sentence[1:]
+  return translated_sentence
 
 
 # install spacy lang: python -m spacy download [en/de]
@@ -85,7 +87,7 @@ num_heads      = 8
 num_enc_layers = 3
 num_dec_layers = 3
 dropout        = 0.1
-max_len        = 100 # used for positional embedding 
+max_len        = 200 # used for positional embedding 
 fwd_exp        = 4 
 src_pad_idx    = english.vocab.stoi["<pad>"] 
 
@@ -113,8 +115,8 @@ criterion = nn.CrossEntropyLoss(ignore_index=pad_idx)
 easy_sentence = "ein pferd geht unter einer brücke neben einem boot um ein haus und durch eine schule."
 easy_response = "a horse goes under a bridge next to a boat around a house and through a school."
 # would need to increase the max_len for these longer sentences which drastically slows down training
-hard_sentence = "ich kann dich nicht verstehen lassen. ich kann niemanden verstehen lassen, was in mir passiert. ich kann es mir nicht einmal erklären."
-hard_response = "i cannot make you understand. i cannot make anyone understand what is happening inside me. i cannot even explain it to myself."
+hard_sentence = "Ein asiatisches Open-Air-Festival mit weißen Worten auf roten Spruchbändern, eine Bühne mit Richtern hinter eine Reihe roter Blumen, und viele asiatische Menschen, die herumstehen."
+hard_response = "Outside asian festival with white words on red banners, a stage of judges behind a row of red flowers with lots of asian people standing by."
 # Kafka seems fitting
 
 # training loop 
@@ -123,9 +125,11 @@ for epoch in range(n_epochs):
 
   # save model each epoch maybe?
   model.eval()
-  translated_sentence = translate_sentence(model, easy_sentence, german, english, device, max_len=max_len)
+  translated_sentence = translate_sentence(model, hard_sentence, german, english, device, max_len=max_len)
 
-  print(f"Translation: \n {translated_sentence}")
+  cleaned_translation = ' '.join([s for s in translated_sentence]).replace(" ,", ",").replace(" .", ".").replace("<sos> ", "<sos>").replace(" <eos>", "<eos>")
+  print(f"Generated Translation: {cleaned_translation}")
+  print(f"Correct   Translation: {hard_response}")
 
   for step, batch in enumerate(train_iter):
     source = batch.src.to(device)
@@ -143,10 +147,15 @@ for epoch in range(n_epochs):
     torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1)
     optimizer.step()
 
-    # plot loss 
+    # plot loss over all time steps - reduce frequency of plots 
     t = (epoch * len(train_iter)) + step
-    if step % 50 == 0:
-      plot_loss(t, loss, 'loss', algo_name, color='#f44')
-      print(f"{t:4d} Epoch {epoch}:{step:4d} loss: {loss:.3f}")
+    if smooth_plots:
+      if step % 50 == 0:
+        plot_loss(step, loss, f'epoch {epoch}', 'Per Epoch', color=epoch_colors[epoch]) # loss for epoch
+        plot_loss(t, loss, 'loss', algo_name)
+    else: 
+      plot_loss(step, loss, f'epoch {epoch}', 'Per Epoch', color=epoch_colors[epoch]) # loss for epoch
+      plot_loss(t, loss, 'loss', algo_name)
+      # print(f"{t:4d} Epoch {epoch}:{step:4d} loss: {loss:.3f}")
 
 # TODO add the Bleu score func 
