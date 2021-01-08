@@ -8,6 +8,9 @@ import random
 import spacy 
 
 from model import * 
+from visualize import *
+
+algo_name = 'Translation Transformer'
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
@@ -107,11 +110,12 @@ optimizer = optim.Adam(model.parameters(), lr=lr)
 pad_idx = english.vocab.stoi["<pad>"]
 criterion = nn.CrossEntropyLoss(ignore_index=pad_idx)
 
-easy_sentence = "ein pferd geht unter einer brücke neben einem boot."
-easy_response = "a horse is walking under a bridge next to a boat."
-
-hard_sentence = "Er lag auf seinem panzerartig harten Rücken und sah, wenn er den Kopf ein wenig hob, seinen gewölbten, braunen, von bogenförmigen Versteifungen geteilten Bauch, auf dessen Höhe sich die Bettdecke, zum gänzlichen Niedergleiten bereit, kaum noch erhalten konnte."
-hard_response = "He lay on his armor-hard back, and saw, when he lifted his head a little, his bulging, brown belly, which was separated by ark-shaped ridges, at whose summit the blanket, ready to glide down completely, could hardly maintain itself."
+easy_sentence = "ein pferd geht unter einer brücke neben einem boot um ein haus und durch eine schule."
+easy_response = "a horse goes under a bridge next to a boat around a house and through a school."
+# would need to increase the max_len for these longer sentences which drastically slows down training
+hard_sentence = "ich kann dich nicht verstehen lassen. ich kann niemanden verstehen lassen, was in mir passiert. ich kann es mir nicht einmal erklären."
+hard_response = "i cannot make you understand. i cannot make anyone understand what is happening inside me. i cannot even explain it to myself."
+# Kafka seems fitting
 
 # training loop 
 for epoch in range(n_epochs):
@@ -123,7 +127,7 @@ for epoch in range(n_epochs):
 
   print(f"Translation: \n {translated_sentence}")
 
-  for i, batch in enumerate(train_iter):
+  for step, batch in enumerate(train_iter):
     source = batch.src.to(device)
     target = batch.trg.to(device)
 
@@ -140,9 +144,9 @@ for epoch in range(n_epochs):
     optimizer.step()
 
     # plot loss 
-    print(f"loss: {loss}")
+    t = (epoch * len(train_iter)) + step
+    if step % 50 == 0:
+      plot_loss(t, loss, 'loss', algo_name, color='#f44')
+      print(f"{t:4d} Epoch {epoch}:{step:4d} loss: {loss:.3f}")
 
-# this takes awhile
-
-# score = bleu(test_data, model, german, english, device)
-# print(f"Bleu score: {score*100:.2f}")
+# TODO add the Bleu score func 
