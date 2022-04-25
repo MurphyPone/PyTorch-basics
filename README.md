@@ -32,6 +32,8 @@ A series of algorithms, and exercises made in an effort to learn PyTorch.
 
 - **Transformer**: Transformers eclipse the standard RNN performance via a self attetion mechanism which applies a significance value that serves to improve contextualization for reconstruction, kind of similar to in application to the function of an LSTM. I won't pretend to fully understand how they work, but here's a diagram
 
+- **Monte Carlo Search Trees**: TODO
+
 ![](https://pytorch.org/tutorials/_images/transformer_architecture.jpg)
 
 ## References
