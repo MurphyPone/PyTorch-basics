@@ -85,14 +85,14 @@ class ConnectFour(Game):
                     return False 
         return True 
 
-    def swap_player_turn(self, player):
+    def switch_player(self, player):
         """toggles which player's turn it is"""
         return "x" if player == "o" else "o"
 
-    def get_legal_moves(self):
+    def get_legal_actions(self):
         moves = []
-        for row in len(self.board):
-            for col in len(self.board[row]):
+        for row in range(len(self.board)):
+            for col in range(len(self.board[row])):
                 if self.board[row][col] == "-":
                     moves.append((row, col))
 
@@ -105,6 +105,11 @@ class ConnectFour(Game):
             for item in row:
                res += f"{item} "
             res += "\n"
+
+        for i in range(len(self.board[0])):
+            res += f"{i + 1} "
+        res += "\n"
+        
         return  res
 
     def start(self):
@@ -130,7 +135,7 @@ class ConnectFour(Game):
                 print("draw!")
                 break 
 
-            player = self.swap_player_turn(player)
+            player = self.switch_player(player)
         
         print()
         print(self)
