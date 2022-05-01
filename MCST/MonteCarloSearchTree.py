@@ -20,7 +20,7 @@ class MonteCarloSearchTreeNode():
         self._results[-1]     = 0 # num losses
         self._untried_actions = self.untried_actions()
 
-    # MCTS specific functions
+    # Helpers
     def untried_actions(self):
         """returns a list of untried, legal actions"""
         self._untried_actions = self.get_legal_actions(self.game.get_state())
@@ -35,23 +35,33 @@ class MonteCarloSearchTreeNode():
         """getter for _n_visits"""
         return self._n_visits
 
-    def expand(self):
-        """
-        states which are possible from the present state are all generated and 
-        the child_node corresponding to this generated state is returned
-        """
+    def is_fully_expanded(self):
+        """checks if there's any more actions that can be taken"""
         # MCTS
-        action = self._untried_actions.pop()
-        next_state = self.move(self.state, action)
+        return len(self._untried_actions) == 0
 
-        # print(TicTacToe(board=next_state))
-        print("expanded")
+    def best_child(self, ε=0.1):
+        """ε-greedy selection"""
+        choice_weights = [(child.Q() / child.N()) + ε * np.sqrt((2 * np.log(self.N()) / child.N())) for child in self.children]
+        
+        return self.children[np.argmax(choice_weights)]
 
-        self.game.set_state(next_state)  # TODO I don't think I want to overwrite the global game state
-        child = MonteCarloSearchTreeNode(self.game, parent=self, parent_action=action)
-        self.children.append(child)
+    def rollout_policy(self, legal_actions):
+        """Choose a random action from the light playout policy"""
+        # legal_actions
+        return random.choice(legal_actions)
 
-        return child
+    def get_legal_actions(self, state):
+        """Construct a list of all possible actions from the given state"""
+        return self.game.get_legal_actions(state)
+
+    def is_game_over(self, state):
+        return self.game.is_game_over(state)
+
+    def game_result(self, state):
+        return self.game.get_result(state, self.game.player)
+
+    ## MCST Logic
 
     def rollout(self):
         """Light playout s.t. an entire game is played out and the outcome is returned"""
@@ -80,29 +90,34 @@ class MonteCarloSearchTreeNode():
         if self.parent:
             self.parent.update(result)
 
-    def is_fully_expanded(self):
-        """checks if there's any more actions that can be taken"""
+    def expand(self):
+        """
+        states which are possible from the present state are all generated and 
+        the child_node corresponding to this generated state is returned
+        """
         # MCTS
-        return len(self._untried_actions) == 0
+        action = self._untried_actions.pop()
+        next_state = self.move(self.state, action)
 
-    def best_child(self, ε=0.1):
-        """ε-greedy selection"""
-        choice_weights = [(child.Q() / child.N()) + ε * np.sqrt((2 * np.log(self.N()) / child.N())) for child in self.children]
-        
-        return self.children[np.argmax(choice_weights)]
+        # print(TicTacToe(board=next_state))
+        print("expanded")
 
-    def rollout_policy(self, legal_actions):
-        """Choose a random action from the light playout policy"""
-        # legal_actions
-        return random.choice(legal_actions)
+        self.game.set_state(next_state)  # TODO I don't think I want to overwrite the global game state
+        child = MonteCarloSearchTreeNode(self.game, parent=self, parent_action=action)
+        self.children.append(child)
+
+        return child
 
     def _tree_policy(self):
         """"""
         # MCTS
         current_node = self
 
-        while not current_node.is_terminal():
+        while not current_node.is_game_over(current_node.state):
+            print("current node not terminal")
             if not current_node.is_fully_expanded():
+                print("current node not fully expanded")
+                # current_node = current_node.expand() # TODO return or update?
                 return current_node.expand()
             else: 
                 current_node = current_node.best_child()
@@ -112,7 +127,7 @@ class MonteCarloSearchTreeNode():
     def best_action(self):
         """choose the action which maximizes reward over time (zero exploration)"""
         # MCTS
-        epochs = 1000
+        epochs = 100
 
         for _ in range(epochs):
             v = self._tree_policy()
@@ -121,27 +136,13 @@ class MonteCarloSearchTreeNode():
 
         return self.best_child(ε=0.0)
 
-    def get_legal_actions(self, state):
-        """Construct a list of all possible actions from the given state"""
-        return self.game.get_legal_actions(state)
-
-    def is_terminal(self):
-        """returns true/false if the game is over"""
-        # MCTS
-        return self.game.is_game_over(self.state)
-
-    def is_game_over(self, state):
-        return self.game.is_game_over(state)
-
-    def game_result(self, state):
-        return self.game.get_result(state, self.game.player)
 
     def move(self, state, action):
         legal_actions = self.get_legal_actions(state)
         if action in legal_actions:
             self.game.fix_spot(action, self.game.player)
             
-        print(TicTacToe(board=self.state))
+        print(TicTacToe(board=self.state, to_move=self.game.player))
         return self.game.get_state()
             
 if __name__ == "__main__":

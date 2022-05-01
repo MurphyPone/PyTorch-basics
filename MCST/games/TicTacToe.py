@@ -5,10 +5,12 @@ import os
 import numpy as np
 
 class TicTacToe(Game):
-    def __init__(self, n=3, board=None):
+    def __init__(self, n=3, board=None, to_move=None):
         """n: the size of the board to create"""
-        if board:
-            self.board = board 
+        if board and to_move:
+            self.board = board
+            self.player = to_move
+
         else: 
             self.board = self.create_board(n)
             self.player = random.choice(["x", "o"])
